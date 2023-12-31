@@ -33,7 +33,7 @@ namespace Idmr.CockpitEditor
 		Panl _itemsPanl;
 		int _numberOfImages = 0;
 		int _activeItem;
-		long[] _offsets = new long[2];
+		readonly long[] _offsets = new long[2];
 		TieInt _cockpit;
 		TieInt.ViewIndex _currentView;
 		Bitmap _view = new Bitmap(640, 456);
@@ -101,7 +101,7 @@ namespace Idmr.CockpitEditor
 				_viewPltt = new Pltt(path, _offsets[1]);
 				_viewMask = new Mask(path, _offsets[0]);
 				_palette = _viewPltt.Palette;
-				_palette.Entries[0] = Color.FromArgb(255, 0, 255);	// transparent marker
+				_palette.Entries[0] = Color.FromArgb(255, 0, 255);  // transparent marker
 				_viewPanl = new Panl(path, 0, _palette);
 				if (_currentView == TieInt.ViewIndex.Forward && _itemsPanl == null)
 				{
@@ -196,8 +196,7 @@ namespace Idmr.CockpitEditor
 				(index < (int)TieInt.LayoutIndex.ThreatDisplayName || index > (int)TieInt.LayoutIndex.ThreatDisplayTime))
 			{
 				Point pt = new Point(_cockpit.Layouts[index].X-1, _cockpit.Layouts[index].Y-1);
-				Size sz = new Size();
-				sz.Height = 10;
+				Size sz = new Size { Height = 10 };
 				if (index == (int)TieInt.LayoutIndex.FrontSensors || index == (int)TieInt.LayoutIndex.RearSensors)
 				{
 					sz = new Size(80, 80);
@@ -207,7 +206,7 @@ namespace Idmr.CockpitEditor
 					sz = new Size(_cockpit.Layouts[index].Argument1, _cockpit.Layouts[index].Argument2);
 				else if (index == (int)TieInt.LayoutIndex.MissionTime) sz.Width = 26;
 				else if (index == (int)TieInt.LayoutIndex.CameraTime) sz.Width = 18;
-				else if ((TieInt.LayoutArgument)TieInt.LayoutArguments[index, 0] == TieInt.LayoutArgument.Digit)
+				else if (TieInt.LayoutArguments[index, 0] == TieInt.LayoutArgument.Digit)
 					sz.Width = (_cockpit.Layouts[index].Argument1 == 0 ? 8 : _cockpit.Layouts[index].Argument1 * 6);
 				else if (index == (int)TieInt.LayoutIndex.CmdBeamCharge) sz = new Size(50, 50);
 				else sz.Width = 36;
@@ -251,9 +250,8 @@ namespace Idmr.CockpitEditor
 				index >= (int)TieInt.LayoutIndex.ThreatDisplayName && index <= (int)TieInt.LayoutIndex.ThreatDisplayTime)
 			{
 				Point pt = new Point(_cockpit.Layouts[index].X-1, _cockpit.Layouts[index].Y-1);
-				Size sz = new Size();
-				sz.Height = 10;
-				if ((TieInt.LayoutArgument)TieInt.LayoutArguments[index, 0] == TieInt.LayoutArgument.Digit)
+				Size sz = new Size { Height = 10 };
+				if (TieInt.LayoutArguments[index, 0] == TieInt.LayoutArgument.Digit)
 					sz.Width = (_cockpit.Layouts[index].Argument1 == 0 ? 8 : _cockpit.Layouts[index].Argument1 * 6);
 				else sz.Width = 80;
 				if (pctItem.BackgroundImage != null)
@@ -337,8 +335,8 @@ namespace Idmr.CockpitEditor
 			int index = cboItems.SelectedIndex;
 			numItemX.Value = _cockpit.Layouts[index].X;
 			numItemY.Value = _cockpit.Layouts[index].Y;
-			lblVar1.Text = ((TieInt.LayoutArgument)TieInt.LayoutArguments[index, 0]).ToString();
-			lblVar2.Text = ((TieInt.LayoutArgument)TieInt.LayoutArguments[index, 1]).ToString();
+			lblVar1.Text = TieInt.LayoutArguments[index, 0].ToString();
+			lblVar2.Text = TieInt.LayoutArguments[index, 1].ToString();
 			_numberOfImages = TieInt.NumberOfImages[cboItems.SelectedIndex];
 			cmdPrev.Enabled = false;
 			if (TieInt.LayoutArguments[index, 0] == TieInt.LayoutArgument.PanlIndex

@@ -14,8 +14,8 @@ namespace Idmr.CockpitEditor
 	/// <summary>Cockpit information for TIE95</summary>
 	class TieInt
 	{
-		private string _filePath;
-		private View[] _views = new View[28];
+		private readonly string _filePath;
+		private readonly View[] _views = new View[28];
 		#region enums
 		public enum ViewIndex { Forward, LeftFore, Left, LeftAft, Aft, RightAft, Right, RightFore, 
 			ForeHigh, LeftForeHigh, LeftHigh, LeftAftHigh, AftHigh, RightAftHigh, RightHigh, RightForeHigh,
@@ -26,7 +26,7 @@ namespace Idmr.CockpitEditor
 			MirrorLeftForeHigh, MirrorLeftHigh, MirrorLeftAftHigh, MirrorAftHigh, MirrorRightAftHigh, MirrorRightHigh,
 			MirrorRightForeHigh, MirrorUp, MirrorDefault, MirrorEmpty, MirrorNoCockpit, MirrorThreatDisplay, MirrorMissionGoals,
 			MirrorInflightMap, MirrorMessageLog, MirrorDamageLog, MirrorWingmanOrders, MirrorKeyboardRef, MirrorFlightOptions}
-		private Layout[] _layouts = new Layout[95];
+		private readonly Layout[] _layouts = new Layout[95];
 		public static int[] NumberOfImages = { 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 1, 1, 1, 1, 4, 0, 0, 2, 2, 2, 2, 0, 2,
 												 0, 0, 0, 9, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0,
 												 0, 0, 0, 2, 2, 3, 0, 0, 0, 0, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -122,48 +122,47 @@ namespace Idmr.CockpitEditor
 		public TieInt(string filePath)
 		{
 			_filePath = filePath;
-			FileStream stream = File.OpenRead(filePath);
-			if (stream.Length != 0x635) throw new ArgumentException("File is not valid TIE95 Cockpit file");
-			BinaryReader br = new BinaryReader(stream);
-			for (int i=0;i<_views.Length;i++)
+			using (FileStream stream = File.OpenRead(filePath))
 			{
-				_views[i].Status = (ViewStatus)br.ReadByte();
-				_views[i].Lfd = new string(br.ReadChars(8)).Trim('\0');
-				stream.Position++;
-				_views[i].MaskX = br.ReadInt16();
-				_views[i].MaskY = br.ReadInt16();
-				_views[i].MaskWidth = br.ReadInt16();
-				_views[i].MaskHeight = br.ReadInt16();
-				_views[i].YAxis = br.ReadInt16();
-				_views[i].Name = new string(br.ReadChars(8)).Trim('\0');
-				stream.Position += 8;
+				if (stream.Length != 0x635) throw new ArgumentException("File is not valid TIE95 Cockpit file");
+				using (BinaryReader br = new BinaryReader(stream))
+				{
+					for (int i = 0; i < _views.Length; i++)
+					{
+						_views[i].Status = (ViewStatus)br.ReadByte();
+						_views[i].Lfd = new string(br.ReadChars(8)).Trim('\0');
+						stream.Position++;
+						_views[i].MaskX = br.ReadInt16();
+						_views[i].MaskY = br.ReadInt16();
+						_views[i].MaskWidth = br.ReadInt16();
+						_views[i].MaskHeight = br.ReadInt16();
+						_views[i].YAxis = br.ReadInt16();
+						_views[i].Name = new string(br.ReadChars(8)).Trim('\0');
+						stream.Position += 8;
+					}
+					for (int i = 0; i < _layouts.Length; i++)
+					{
+						_layouts[i].X = br.ReadInt16();
+						_layouts[i].Y = br.ReadInt16();
+						_layouts[i].Argument1 = br.ReadByte();
+						_layouts[i].Argument2 = br.ReadByte();
+					}
+					_panel = new string(br.ReadChars(8)).Trim('\0');
+					stream.Position++;
+					Unknown = br.ReadByte();
+				}
 			}
-			for (int i=0;i<_layouts.Length;i++)
-			{
-				_layouts[i].X = br.ReadInt16();
-				_layouts[i].Y = br.ReadInt16();
-				_layouts[i].Argument1 = br.ReadByte();
-				_layouts[i].Argument2 = br.ReadByte();
-			}
-			_panel = new string(br.ReadChars(8)).Trim('\0');
-			stream.Position++;
-			Unknown = br.ReadByte();
-			stream.Close();
 		}
 
-		public string FileDirectory { get { return _filePath.Substring(0, _filePath.LastIndexOf("\\")+1); } }
-		public string FileName { get { return _filePath.Substring(_filePath.LastIndexOf("\\")+1); } }
-		public View[] Views { get { return _views; } }
-		public Layout[] Layouts { get { return _layouts; } }
+		public string FileDirectory => _filePath.Substring(0, _filePath.LastIndexOf("\\") + 1);
+		public string FileName => _filePath.Substring(_filePath.LastIndexOf("\\") + 1);
+		public View[] Views => _views;
+		public Layout[] Layouts => _layouts;
 		/// <summary>Gets or Sets 8 char filename (.PNL extension implied) of Panel data</summary>
 		public string Panel
 		{
-			get { return _panel; }
-			set
-			{
-				if (value.Length > 8) throw new ArgumentException("Panel name must be 8 characters or less");
-				else _panel = value;
-			}
+			get => _panel;
+			set => _panel = value.Length > 8 ? value.Substring(0, 8) : value;
 		}
 
 		public struct View
@@ -180,21 +179,13 @@ namespace Idmr.CockpitEditor
 
 			public string Lfd
 			{
-				get { return _lfd; }
-				set
-				{
-					if (value.Length > 8) _lfd = value.Substring(0, 8);
-					else _lfd = value;
-				}
+				get => _lfd;
+				set => _lfd = value.Length > 8 ? value.Substring(0, 8) : value;
 			}
 			public string Name
 			{
-				get { return _name; }
-				set
-				{
-					if (value.Length > 8) _name = value.Substring(0,8);
-					else _name = value;
-				}
+				get => _name;
+				set => _name = value.Length > 8 ? value.Substring(0, 8) : value;
 			}
 		}
 		public struct Layout
